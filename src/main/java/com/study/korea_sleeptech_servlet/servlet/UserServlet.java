@@ -21,7 +21,10 @@ package com.study.korea_sleeptech_servlet.servlet;
  * */
 
 // jakarta.servlet: 서블릿 관련 기본 인터페이스 제공
+
 import com.study.korea_sleeptech_servlet.dao.UserDao;
+import com.study.korea_sleeptech_servlet.model.User;
+import jakarta.servlet.RequestDispatcher;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -30,6 +33,7 @@ import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.List;
 
 @WebServlet("/")
 // 서블릿 URL 매핑을 위한 어노테이션
@@ -96,36 +100,86 @@ public class UserServlet extends HttpServlet {
     // 1. 새 사용자 입력 폼을 보여주는 메서드
     private void showNewForm(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException, SQLException {
-
+        // 사용자 입력 폼 페이지로 요청 전달
+        // : 서버 내부에서 화면 전환
+        // RequestDispatcher: 요청을 다른 자원(JSP, 서블릿 등)으로 넘기는 객체
+        RequestDispatcher dispatcher = request.getRequestDispatcher("/user/form.jsp");
+        dispatcher.forward(request, response); // 해당 경로로 서버 내부에서 이동
     }
 
     // 2. 새로운 사용자 정보를 DB에 삽입하는 메서드
     private void insertUser(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException, SQLException {
+        // 요청 파라미터에서 name, email, country 값을 받아오기
+        // : request.getParameter(String attrValue)
+        // - 자바 서블릿에서 클라이언트가 보낸 HTML 폼 데이터나 쿼리스트링 데이터를 서버에서 꺼낼 때 사용
+        // cf) attrValue: 클라이언트가 전송한 데이터의 파라미터 이름 (input 태그의 name 속성)
+        String name = request.getParameter("name");
+        String email = request.getParameter("email");
+        String country = request.getParameter("country");
 
+        User newUser = new User(0, name, email, country);
+
+        userDao.insertUser(newUser); // DAO를 통해 사용자 정보 DB에 저장
+
+        // response.sendRedirect("URL")
+        // : 자바 서블릿에서 클라이언트에게 다른 페이지로 이동을 명령하는 기능
+        response.sendRedirect("list"); // '/list'로 가라! (내부적으로 새로운 요청을 발생시키는 방식)
     }
 
     // 3. 기존 사용자 정보 수정 폼을 보여주는 메서드
     private void showEditForm(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException, SQLException {
+        // URL 파라미터에서 전달된 사용자 id 가져오기
+        int id = Integer.parseInt(request.getParameter("id"));
 
+        User existingUser = userDao.selectUser(id); // 요청 받은 id의 (기존) 사용자 정보를 조회
+
+        // 조회한 사용자 정보를 request 객체에 저장 (JSP에서 사용하기 위함)
+        request.setAttribute("user", existingUser);
+
+        // 사용자 폼 페이지로 이동
+        RequestDispatcher dispatcher = request.getRequestDispatcher("/user/form.jsp");
+        dispatcher.forward(request, response);
     }
 
     // 4. 사용자 정보를 업데이트(수정)하는 메서드
     private void updateUser(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException, SQLException {
+        // 요청 파라미터에서 데이터 추출
+        int id = Integer.parseInt(request.getParameter("id"));
+        String name = request.getParameter("name");
+        String email = request.getParameter("email");
+        String country = request.getParameter("country");
 
+        // 수정된 정보를 가진 User 객체 생성
+        User user = new User(id, name, email, country);
+
+        userDao.updateUser(user);
+
+        // 사용자 목록 페이지로 리다이렉트
+        response.sendRedirect("list");
     }
 
     // 5. 사용자 정보를 삭제하는 메서드
     private void deleteUser(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException, SQLException {
+        int id = Integer.parseInt(request.getParameter("id"));
 
+        userDao.deleteUser(id);
+
+        response.sendRedirect("list");
     }
 
     // 6. 전체 사용자 목록을 조회하여 보여주는 메서드
     private void listUser(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException, SQLException {
+        List<User> listUser = userDao.selectAllUsers();
 
+        request.setAttribute("listUser", listUser);
+
+        // 사용자 목록을 보여주는 JSP 페이지로 이동
+        RequestDispatcher dispatcher = request.getRequestDispatcher("/user/list.jsp");
+        dispatcher.forward(request, response);
     }
 }
