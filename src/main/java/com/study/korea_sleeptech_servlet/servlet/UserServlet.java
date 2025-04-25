@@ -80,6 +80,9 @@ public class UserServlet extends HttpServlet {
                 case "/delete": // 사용자 삭제
                     deleteUser(request, response);
                     break;
+                case "/list":
+                    listUser(request, response);
+                    break;
                 default: // 사용자 목록 출력 (기본 동작)
                     listUser(request, response);
                     break;

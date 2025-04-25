@@ -33,7 +33,7 @@ public class UserDao {
              PreparedStatement pstmt = conn.prepareStatement(UserSql.SELECT_BY_ID)
         ) {
             pstmt.setInt(1, id);
-            ResultSet rs = pstmt.executeQuery();
+            ResultSet rs = pstmt.executeQuery(); // executeQuery()는 요청하는 데이터가 ResultSet 내부에 담겨서 반환
 
             if (rs.next()) {
                 user = new User(
@@ -75,7 +75,10 @@ public class UserDao {
             pstmt.setString(3, user.getCountry());
             pstmt.setInt(4, user.getId());
 
-            rowUpdated = pstmt.executeUpdate() > 0;
+            // >, <, >=, <=: boolean 값 반환
+            // 1 > 0 == true
+            // 0 > 0 == false
+            rowUpdated = pstmt.executeUpdate() > 0; // executeUpdate()는 영향 미친 레코드의 수를 반환 (int)
         }
         return rowUpdated;
     }
